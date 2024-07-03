@@ -14,12 +14,14 @@ function BlogInfo() {
 
   const params = useParams()
 
+  //* getBlogs State 
   const [getBlogs, setGetBlogs] = useState();
 
   const getAllBlogs = async () => {
     setloading(true);
     try {
-      const productTemp = await getDoc(doc(fireDb, "blogPost", params.id))
+      const productTemp = await getDoc(doc(fireDB, "blogPost", params.id))
+      console.log(productTemp,"productTemp");
       if (productTemp.exists()) {
         setGetBlogs(productTemp.data());
       } else {
@@ -32,6 +34,7 @@ function BlogInfo() {
     }
   }
 
+  // console.log(getBlogs)
 
   useEffect(() => {
     getAllBlogs();
@@ -39,6 +42,7 @@ function BlogInfo() {
   }, []);
 
 
+  //* Create markup function 
   function createMarkup(c) {
     return { __html: c };
   }
@@ -79,7 +83,7 @@ function BlogInfo() {
   const getcomment = async () => {
     try {
       const q = query(
-        collection(fireDb, "blogPost/" + `${params.id}/` + "comment/"),
+        collection(fireDB, "blogPost/" + `${params.id}/` + "comment/"),
         orderBy('time')
       );
       const data = onSnapshot(q, (QuerySnapshot) => {
@@ -100,6 +104,8 @@ function BlogInfo() {
     getcomment()
   }, []);
 
+  console.log(getBlogs,"getBlogs");
+
   return (
     <Layout>
       <section className="rounded-lg h-full overflow-hidden max-w-4xl mx-auto px-4 ">
@@ -108,9 +114,11 @@ function BlogInfo() {
             <Loader />
             :
             <div>
+              {/* Thumbnail  */}
               <img alt="content" className="mb-3 rounded-lg h-full w-full"
                 src={getBlogs?.thumbnail}
               />
+              {/* title And date  */}
               <div className="flex justify-between items-center mb-3">
                 <h1 style={{ color: mode === 'dark' ? 'white' : 'black' }}
                   className=' text-xl md:text-2xl lg:text-2xl font-semibold'>
@@ -125,6 +133,7 @@ function BlogInfo() {
                         'border-gray-600' : 'border-gray-400'}`}
               />
 
+              {/* blog Content  */}
               <div className="content">
                 <div
                 className={`[&> h1]:text-[32px] [&>h1]:font-bold  [&>h1]:mb-2.5
