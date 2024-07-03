@@ -6,20 +6,16 @@ import { useNavigate } from "react-router";
 
 export default function SearchDialog() {
   const [open, setOpen] = useState(false);
-
   const handleOpen = () => setOpen(!open);
-
   const context = useContext(myContext);
   const { mode, searchkey, setSearchkey, getAllBlog } = context;
-
   const naviagte = useNavigate();
+  
   return (
     <Fragment>
-      {/* Search Icon  */}
       <div onClick={handleOpen}>
         <AiOutlineSearch size={20} color="white" />
       </div>
-      {/* Dialog  */}
       <Dialog
         className=" relative right-[1em] w-[25em]  md:right-0 md:w-0 lg:right-0 lg:w-0"
         open={open}
@@ -29,10 +25,8 @@ export default function SearchDialog() {
           color: mode === "dark" ? "white" : "black",
         }}
       >
-        {/* Dialog Body  */}
         <DialogBody>
           <div className="flex w-full   justify-center">
-            {/* Input  */}
             <Input
               color="white"
               type="search"
