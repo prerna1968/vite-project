@@ -14,6 +14,7 @@ Features
 - View and manage comments
 - Used firebase for Authentication.
 - Implementation of pagination for the list of blog posts.
+- Implemented an additional feature for theme changing (Switching between light and dark mode)
 
 Technologies Used
 

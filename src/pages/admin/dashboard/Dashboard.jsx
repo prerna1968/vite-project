@@ -163,7 +163,7 @@ function Dashboard() {
                       scope="col"
                       className="px-6 py-3"
                     >
-                      Category
+                      Description
                     </th>
                     <th
                       style={{
@@ -187,8 +187,7 @@ function Dashboard() {
                 </thead>
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => {
-                    const { thumbnail, date, id, title, category } = item;
-                    console.log(item?.blogs.category,"newItem");
+                    const { thumbnail, date, id, title, description } = item;
                     return (
                       <tbody key={id}>
                         <tr
@@ -233,8 +232,7 @@ function Dashboard() {
                             }}
                             className="px-6 py-4"
                           >
-                            {item?.blogs.category}
-                            {console.log(item?.blogs.category,"category")}
+                            {item?.description}
                           </td>
                           <td
                             style={{
