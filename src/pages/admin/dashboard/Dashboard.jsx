@@ -188,6 +188,7 @@ function Dashboard() {
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => {
                     const { thumbnail, date, id, title, category } = item;
+                    console.log(item?.blogs.category,"newItem");
                     return (
                       <tbody key={id}>
                         <tr
@@ -232,7 +233,8 @@ function Dashboard() {
                             }}
                             className="px-6 py-4"
                           >
-                            {category}
+                            {item?.blogs.category}
+                            {console.log(item?.blogs.category,"category")}
                           </td>
                           <td
                             style={{

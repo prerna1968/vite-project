@@ -3,15 +3,19 @@ import Layout from "../../../components/layout/Layout";
 import myContext from "../../../context/data/myContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 function EditBlog() {
   const context = useContext(myContext);
-  const { mode, getBlogById, updateBlog, getAllBlogs } = context;
+  const { getBlogById, updateBlog } = context;
   const { id } = useParams();
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const navigate = useNavigate();
+  const storage = getStorage();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,6 +24,9 @@ function EditBlog() {
         setContent(blog.content);
         setTitle(blog.title);
         setDescription(blog.description);
+        if (blog.thumbnail) {
+          setThumbnailPreview(blog.thumbnail);
+        }
       } else {
         console.error("No blog found with the given ID.");
       }
@@ -27,22 +34,51 @@ function EditBlog() {
     fetchData();
   }, [id, getBlogById]);
 
-  const handleEditorChange = (content, editor) => {
+  const handleEditorChange = (content: string, editor: any) => {
     setContent(content);
   };
 
-  const handleTitleChange = (e) => {
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
   };
 
-  const handleDescriptionChange = (e) => {
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
   };
 
-  const handleSave = () => {
-    updateBlog(id, { title, description, content });
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    setThumbnail(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result && typeof reader.result === 'string') {
+          setThumbnailPreview(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSave = async () => {
+    let thumbnailUrl = thumbnailPreview;
+    if (thumbnail) {
+      const storageRef = ref(storage, `thumbnails/${thumbnail.name}`);
+      await uploadBytes(storageRef, thumbnail);
+      thumbnailUrl = await getDownloadURL(storageRef);
+    }
+
+    const blogData = {
+      title,
+      description,
+      content,
+      thumbnail: thumbnailUrl,
+    };
+
+    await updateBlog(id, blogData);
     navigate("/dashboard");
   };
+
 
   return (
     <Layout>
@@ -66,6 +102,23 @@ function EditBlog() {
               placeholder="Description"
               rows={3}
             />
+          </div>
+          <div className="mb-4">
+            <input
+              type="file"
+              onChange={handleThumbnailChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="Thumbnail"
+              accept="image/*"
+            />
+            {thumbnailPreview && (
+              <img
+                src={thumbnailPreview}
+                alt="Thumbnail Preview"
+                className="mt-2"
+                style={{ maxWidth: "200px" }}
+              />
+            )}
           </div>
           <Editor
             apiKey="tkkuxr58v88b9hvbr55c2smwgu25z2yhf6mwtdyhomqyhpzo"
