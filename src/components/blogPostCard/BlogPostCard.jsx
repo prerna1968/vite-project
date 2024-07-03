@@ -9,6 +9,10 @@ function BlogPostCard() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div>
       <section className="text-gray-600 body-font">
@@ -91,16 +95,16 @@ function BlogPostCard() {
             )}
           </div>
           <div className="flex justify-center my-5">
-            <Button
-              style={{
-                background:
-                  mode === "dark" ? "rgb(226, 232, 240)" : "rgb(30, 41, 59)",
-                color:
-                  mode === "dark" ? "rgb(30, 41, 59)" : "rgb(226, 232, 240)",
-              }}
-            >
-              See More
-            </Button>
+            <Link to={"/allblogs"}>
+              <Button
+                style={{
+                  background:
+                    mode === "dark" ? "rgb(226, 232, 240)" : "rgb(30, 41, 59)",
+                  color:
+                    mode === "dark" ? "rgb(30, 41, 59)" : "rgb(226, 232, 240)",
+                }}
+              ></Button>
+            </Link>
           </div>
         </div>
       </section>
