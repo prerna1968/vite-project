@@ -11,6 +11,7 @@ export default function SearchDialog() {
   const { mode, searchkey, setSearchkey, getAllBlog } = context;
   const naviagte = useNavigate();
   
+  console.log(getAllBlog,"all>>");
   return (
     <Fragment>
       <div onClick={handleOpen}>
@@ -43,7 +44,7 @@ export default function SearchDialog() {
           <div className="flex justify-center flex-wrap  sm:mx-auto sm:mb-2 -mx-2  mt-4 mb-2 ">
             {getAllBlog
               .filter((obj) =>
-                obj.blogs.title.toLowerCase().includes(searchkey)
+                obj.title.toLowerCase().includes(searchkey)
               )
               .map((item, index) => {
                 return (
@@ -58,7 +59,7 @@ export default function SearchDialog() {
                         alt=""
                       />
                       <p className="w-40 text-sm">{item.date}</p>
-                      <h1>{item.blogs.title}</h1>
+                      <h1>{item.title}</h1>
                     </div>
                   </div>
                 );

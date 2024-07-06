@@ -11,7 +11,7 @@ function EditBlog() {
   const { id } = useParams();
   const [content, setContent] = useState("");
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string>("");
   const navigate = useNavigate();
@@ -20,10 +20,13 @@ function EditBlog() {
   useEffect(() => {
     const fetchData = async () => {
       const blog = await getBlogById(id);
+      console.log(blog,"blogssss>>>");
+      
+      
       if (blog) {
         setContent(blog.content);
         setTitle(blog.title);
-        setDescription(blog.description);
+        setCategory(blog.category);
         if (blog.thumbnail) {
           setThumbnailPreview(blog.thumbnail);
         }
@@ -34,7 +37,7 @@ function EditBlog() {
     fetchData();
   }, [id, getBlogById]);
 
-  const handleEditorChange = (content: string, editor: any) => {
+  const handleEditorChange = (content: string) => {
     setContent(content);
   };
 
@@ -42,8 +45,8 @@ function EditBlog() {
     setTitle(e.target.value);
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDescription(e.target.value);
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCategory(e.target.value);
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,95 +64,70 @@ function EditBlog() {
   };
 
   const handleSave = async () => {
-    let thumbnailUrl = thumbnailPreview;
-    if (thumbnail) {
-      const storageRef = ref(storage, `thumbnails/${thumbnail.name}`);
-      await uploadBytes(storageRef, thumbnail);
-      thumbnailUrl = await getDownloadURL(storageRef);
-    }
-
-    const blogData = {
-      title,
-      description,
-      content,
-      thumbnail: thumbnailUrl,
+    const updateBlogWithImage = async (thumbnailUrl: string) => {
+      await updateBlog(id, { content, title, category, thumbnail: thumbnailUrl });
+      navigate("/dashboard");
     };
 
-    await updateBlog(id, blogData);
-    navigate("/dashboard");
+    if (thumbnail) {
+      const storageRef = ref(storage, `blogThumbnails/${thumbnail.name}`);
+      uploadBytes(storageRef, thumbnail).then((snapshot) => {
+        getDownloadURL(snapshot.ref).then(updateBlogWithImage);
+      });
+    } else {
+      updateBlogWithImage(thumbnailPreview);
+    }
   };
-
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="py-10">
-          <h1 className="text-2xl font-bold mb-4">Edit Blog Post</h1>
-          <div className="mb-4">
-            <input
-              type="text"
-              value={title}
-              onChange={handleTitleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Title"
-            />
-          </div>
-          <div className="mb-4">
-            <textarea
-              value={description}
-              onChange={handleDescriptionChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Description"
-              rows={3}
-            />
-          </div>
-          <div className="mb-4">
-            <input
-              type="file"
-              onChange={handleThumbnailChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Thumbnail"
-              accept="image/*"
-            />
-            {thumbnailPreview && (
-              <img
-                src={thumbnailPreview}
-                alt="Thumbnail Preview"
-                className="mt-2"
-                style={{ maxWidth: "200px" }}
-              />
-            )}
-          </div>
-          <Editor
-            apiKey="tkkuxr58v88b9hvbr55c2smwgu25z2yhf6mwtdyhomqyhpzo"
-            value={content}
-            init={{
-              height: 500,
-              menubar: true,
-              plugins: [
-                "advlist autolink lists link image charmap print preview anchor",
-                "searchreplace visualblocks code fullscreen",
-                "insertdatetime media table paste code help wordcount",
-              ],
-              toolbar:
-                "undo redo | formatselect | " +
-                "bold italic backcolor | alignleft aligncenter " +
-                "alignright alignjustify | bullist numlist outdent indent | " +
-                "removeformat | help",
-              content_style:
-                "body { font-family: 'Roboto', sans-serif; font-size: 16px; }",
-            }}
-            onEditorChange={handleEditorChange}
-          />
-          <div className="mt-4">
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md"
-            >
-              Save
-            </button>
-          </div>
-        </div>
+      <div className="flex flex-col items-center w-full px-6 md:px-10 py-8">
+        <h2 className="text-2xl font-bold mb-4">Edit Blog</h2>
+        <input
+          type="text"
+          value={title}
+          onChange={handleTitleChange}
+          placeholder="Title"
+          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded"
+        />
+        <textarea
+          value={category}
+          onChange={handleCategoryChange}
+          placeholder="Category"
+          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded"
+        />
+        <input
+          type="file"
+          onChange={handleThumbnailChange}
+          className="mb-4"
+        />
+        {thumbnailPreview && (
+          <img src={thumbnailPreview} alt="Thumbnail Preview" className="w-64 h-64 object-cover mb-4" />
+        )}
+        <Editor
+          apiKey="tkkuxr58v88b9hvbr55c2smwgu25z2yhf6mwtdyhomqyhpzo"
+          value={content}
+          onEditorChange={handleEditorChange}
+          init={{
+            height: 500,
+            menubar: true,
+            plugins: [
+              'advlist autolink lists link image charmap print preview anchor',
+              'searchreplace visualblocks code fullscreen',
+              'insertdatetime media table paste code help wordcount'
+            ],
+            toolbar:
+              'undo redo | formatselect | bold italic backcolor | \
+              alignleft aligncenter alignright alignjustify | \
+              bullist numlist outdent indent | removeformat | help'
+          }}
+        />
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 mt-4 text-white bg-blue-500 rounded"
+        >
+          Save Changes
+        </button>
       </div>
     </Layout>
   );

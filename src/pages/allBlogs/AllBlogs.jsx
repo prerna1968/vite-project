@@ -26,7 +26,7 @@ function AllBlogs() {
                                 {getAllBlog.map((item, index) => {
                                     console.log(item,"lll");
                                     const { thumbnail, id, date } = item
-                                    console.log(item)
+                                    console.log(item,">>>")
                                     return (
                                         <div className="p-4 md:w-1/3" key={index}>
                                             <div
@@ -60,7 +60,7 @@ function AllBlogs() {
                                                             ? 'rgb(226, 232, 240)'
                                                             : ' rgb(30, 41, 59)'
                                                     }}>
-                                                        {item.blogs.title}
+                                                        {item.title}
                                                     </h1>
                                                     <p className="leading-relaxed mb-3" style={{
                                                         color: mode === 'dark'

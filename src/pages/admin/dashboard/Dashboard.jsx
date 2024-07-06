@@ -3,46 +3,64 @@ import Layout from "../../../components/layout/Layout";
 import myContext from "../../../context/data/myContext";
 import { Button } from "@material-tailwind/react";
 import { Link, useNavigate } from "react-router-dom";
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { fireDB } from "../../../firebase/firebaseConfig"; // ensure the correct path
 
 function Dashboard() {
   const context = useContext(myContext);
-  const { mode, getAllBlog, deleteBlogs } = context;
+  const { mode } = context;
   const navigate = useNavigate();
-
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 5; // set the number of items per page
 
-  const logout = () => {
-    localStorage.clear();
-    navigate("/");
-  };
-
-  useEffect(() => {
-    getAllBlog;
-  }, []);
-
-  const handlePageChange = (direction) => {
-    if (
-      direction === "next" &&
-      currentPage < Math.ceil(getAllBlog.length / itemsPerPage)
-    ) {
-      setCurrentPage(currentPage + 1);
-    } else if (direction === "prev" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
+  const getAllBlogs = async () => {
+    setLoading(true);
+    try {
+      const qry = query(collection(fireDB, "blogPost"), orderBy("time", "desc"));
+      const data = await getDocs(qry);
+      const blogArray = data.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setBlogs(blogArray);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, getAllBlog.length);
-  const currentItems = getAllBlog.slice(startIndex, endIndex);
+  useEffect(() => {
+    getAllBlogs();
+  }, []);
 
-  const totalPages = Math.ceil(getAllBlog.length / itemsPerPage);
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(fireDB, 'blogPost', id));
+      setBlogs(blogs.filter(blog => blog.id !== id));
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+    }
+  };
+
+  const totalPages = Math.ceil(blogs.length / itemsPerPage);
+  const currentItems = blogs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const handlePageChange = (direction) => {
+    if (direction === "prev" && currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    } else if (direction === "next" && currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   const handleEdit = (id) => {
     navigate(`/editblog/${id}`);
   };
 
-  console.log(currentItems,"current");
+  const logout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
 
   return (
     <Layout>
@@ -78,10 +96,10 @@ function Dashboard() {
               style={{ color: mode === "dark" ? "white" : "black" }}
               className="font-semibold"
             >
-              <span>Total Blogs: </span> {getAllBlog.length}
+              <span>Total Blogs: </span> {blogs.length}
             </h2>
             <div className="flex gap-2 mt-2">
-              <Link to={"/createblog"}>
+              <Link to="/createblog">
                 <div className="mb-2">
                   <Button
                     style={{
@@ -120,190 +138,188 @@ function Dashboard() {
             mode === "dark" ? "border-gray-300" : "border-gray-400"
           }`}
         />
-        <div className="">
-          <div className="container mx-auto px-4 max-w-7xl my-5">
-            <div className="relative overflow-x-auto shadow-md sm:rounded-xl">
-              <table className="w-full border-2 border-white shadow-md text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead
-                  style={{
-                    background: mode === "dark" ? "white" : "rgb(30, 41, 59)",
-                  }}
-                  className="text-xs"
-                >
-                  <tr>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      S.No
-                    </th>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      Thumbnail
-                    </th>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      Title
-                    </th>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      Description
-                    </th>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      Date
-                    </th>
-                    <th
-                      style={{
-                        color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
-                      }}
-                      scope="col"
-                      className="px-6 py-3"
-                    >
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+        <div className="container mx-auto px-4 max-w-7xl my-5">
+          <div className="relative overflow-x-auto shadow-md sm:rounded-xl">
+            <table className="w-full border-2 border-white shadow-md text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead
+                style={{
+                  background: mode === "dark" ? "white" : "rgb(30, 41, 59)",
+                }}
+                className="text-xs"
+              >
+                <tr>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    S.No
+                  </th>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    Thumbnail
+                  </th>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    Title
+                  </th>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    Category
+                  </th>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    Date
+                  </th>
+                  <th
+                    style={{
+                      color: mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                    }}
+                    scope="col"
+                    className="px-6 py-3"
+                  >
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => {
-                    console.log(item?.blogs,"items");
-                    const { thumbnail, date, id, title, blogs, category } = item;
+                    const { thumbnail, date, id, title, category } = item;
+                    console.log(title,"titl>>>>");
+                    console.log(item,"item>>");
                     return (
-                      <tbody key={id}>
-                        <tr
-                          className="border-b-2"
+                      <tr
+                        key={id}
+                        className="border-b-2"
+                        style={{
+                          background:
+                            mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                        }}
+                      >
+                        <td
                           style={{
-                            background:
-                              mode === "dark" ? "rgb(30, 41, 59)" : "white",
+                            color: mode === "dark" ? "white" : "black",
                           }}
+                          className="px-6 py-4"
                         >
-                          <td
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            className="px-6 py-4"
+                          {index + 1}.
+                        </td>
+                        <th
+                          style={{
+                            color: mode === "dark" ? "white" : "black",
+                          }}
+                          scope="row"
+                          className="px-6 py-4 font-medium"
+                        >
+                          <img
+                            className="w-16 rounded-lg"
+                            src={thumbnail}
+                            alt="thumbnail"
+                          />
+                        </th>
+                        <td
+                          style={{
+                            color: mode === "dark" ? "white" : "black",
+                          }}
+                          className="px-6 py-4"
+                        >
+                          {title}
+                        </td>
+                        <td
+                          style={{
+                            color: mode === "dark" ? "white" : "black",
+                          }}
+                          className="px-6 py-4"
+                        >
+                          {category}
+                        </td>
+                        <td
+                          style={{
+                            color: mode === "dark" ? "white" : "black",
+                          }}
+                          className="px-6 py-4"
+                        >
+                          {date}
+                        </td>
+                        <td
+                          style={{
+                            color: mode === "dark" ? "white" : "black",
+                          }}
+                          className="px-6 py-4 flex gap-2"
+                        >
+                          <button
+                            onClick={() => handleEdit(id)}
+                            className="px-4 py-1 rounded-lg text-white font-bold bg-blue-500"
                           >
-                            {startIndex + index + 1}.
-                          </td>
-                          <th
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            scope="row"
-                            className="px-6 py-4 font-medium"
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(id)}
+                            className="px-4 py-1 rounded-lg text-white font-bold bg-red-500"
                           >
-                            <img
-                              className="w-16 rounded-lg"
-                              src={thumbnail}
-                              alt="thumbnail"
-                            />
-                          </th>
-                          <td
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            className="px-6 py-4"
-                          >
-                            {blogs.title}
-                          </td>
-                          <td
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            className="px-6 py-4"
-                          >
-                            {blogs?.category}
-                          </td>
-                          <td
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            className="px-6 py-4"
-                          >
-                            {date}
-                          </td>
-                          <td
-                            style={{
-                              color: mode === "dark" ? "white" : "black",
-                            }}
-                            className="px-6 py-4 flex gap-2"
-                          >
-                            <button
-                              onClick={() => handleEdit(id)}
-                              className="px-4 py-1 rounded-lg text-white font-bold bg-blue-500"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteBlogs(id)}
-                              className="px-4 py-1 rounded-lg text-white font-bold bg-red-500"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <tbody>
-                    <tr>
-                      <td colSpan="6" className="text-center py-4">
-                        No blogs found
-                      </td>
-                    </tr>
-                  </tbody>
+                  <tr>
+                    <td colSpan="6" className="text-center py-4">
+                      No blogs found
+                    </td>
+                  </tr>
                 )}
-              </table>
-            </div>
-            <div className="flex justify-center mt-4">
-              <button
-                onClick={() => handlePageChange("prev")}
-                disabled={currentPage === 1}
-                className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === 1 ? "bg-gray-400" : "bg-blue-500 text-white"
-                }`}
-              >
-                &lt;
-              </button>
-              <span className="mx-1 px-3 py-1 text-sm">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange("next")}
-                disabled={currentPage === totalPages}
-                className={`mx-1 px-3 py-1 rounded ${
-                  currentPage === totalPages
-                    ? "bg-gray-400"
-                    : "bg-blue-500 text-white"
-                }`}
-              >
-                &gt;
-              </button>
-            </div>
+              </tbody>
+            </table>
+          </div>
+          <div className="flex justify-center mt-4">
+            <button
+              onClick={() => handlePageChange("prev")}
+              disabled={currentPage === 1}
+              className={`mx-1 px-3 py-1 rounded ${
+                currentPage === 1 ? "bg-gray-400" : "bg-blue-500 text-white"
+              }`}
+            >
+              &lt;
+            </button>
+            <span className="mx-1 px-3 py-1 text-sm">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => handlePageChange("next")}
+              disabled={currentPage === totalPages}
+              className={`mx-1 px-3 py-1 rounded ${
+                currentPage === totalPages
+                  ? "bg-gray-400"
+                  : "bg-blue-500 text-white"
+              }`}
+            >
+              &gt;
+            </button>
           </div>
         </div>
       </div>
