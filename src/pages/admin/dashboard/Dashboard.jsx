@@ -42,6 +42,8 @@ function Dashboard() {
     navigate(`/editblog/${id}`);
   };
 
+  console.log(currentItems,"current");
+
   return (
     <Layout>
       <div className="py-10">
@@ -187,7 +189,8 @@ function Dashboard() {
                 </thead>
                 {currentItems.length > 0 ? (
                   currentItems.map((item, index) => {
-                    const { thumbnail, date, id, title, description } = item;
+                    console.log(item?.blogs,"items");
+                    const { thumbnail, date, id, title, blogs, category } = item;
                     return (
                       <tbody key={id}>
                         <tr
@@ -224,7 +227,7 @@ function Dashboard() {
                             }}
                             className="px-6 py-4"
                           >
-                            {title}
+                            {blogs.title}
                           </td>
                           <td
                             style={{
@@ -232,7 +235,7 @@ function Dashboard() {
                             }}
                             className="px-6 py-4"
                           >
-                            {item?.description}
+                            {blogs?.category}
                           </td>
                           <td
                             style={{
